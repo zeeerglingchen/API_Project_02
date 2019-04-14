@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>API</title>
+    <link rel="stylesheet" href="css/api.css">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src = "nytimesArchive.js"></script>
+
+  </head>
+  <body>
+    <div id = "htmltemp"> </div>
+    <script>
+
+
+      var NYT_api_key = "0XOkWNt3r91B3VmJEs0R79GizUVnxGxO";
+      var GBooks_api_key = "AIzaSyCqm6sVxKFGfwiIREz82pwTZz0cOMNtJTA";
+
+      fetch("https://api.nytimes.com/svc/books/v3/lists.json?list-name=hardcover-fiction&api-key=" + NYT_api_key)
+        // .then(function(res){
+        //   console.log(res)
+        //   return res
+        // }) //then is a linear structure what being returned previously will give to the next then
+        // .then(function(data){
+        //   console.log(data)
+        // })
+
+
+      .then(res => {return res.json();})
+      .then(json => {
+        // console.log(json.results) //why 15 results?
+        getdatafromNYT(json)
+
+          })
+
+      .catch((err) => console.log(err))
+
+      function getdatafromNYT(bookslist){
+        var htmltemp = `
+        <div id = "title">
+          <h1 id = "h1"> Best Sellers</h1>
+        </div>`
+        bookslist.results.forEach(function(book){
+          var isbn = book.isbns[0].isbn10
+          var bkinfo = book.book_details[0]
+          var lastweekrank = book.rank_last_week || "n/a"
+          var weekonlist = book.weeks_on_list || "This is the first week"
+          // console.log(lastweekrank)
+          // console.log(book)
+          // console.log(isbn)
+          // console.log(book)
+          // console.log(weekonlist)
+          // var htmltemp = ``  //why?
+          htmltemp += `
+          <div id = ${book.rank} class = "book">
+            <div class = "grid" id = "img_box">
+              <img src = "#" alt = "bookcover" id = "img${book.rank}" class = "image">
+            </div>
+            <div id = "bookdes">
+              <h2> Rank: ${book.rank}</h2>
+              <h2 id = "name" ><a href = ${book.amazon_product_url}> Book Name: ${bkinfo.title}</a></h2>
+              <p> Book isbn number: ${isbn}</p>
+              <p> Author: ${bkinfo.author} </p>
+              <p> Publisher: ${bkinfo.publisher} </p>
+              <p> Description: ${bkinfo.description} </p>
+            </div>
+            <div id ="stats" >
+              <hr>
+              <p> Last Week: ${lastweekrank}</p>
+              <p> Week on List: ${weekonlist}</p>
+
+            </div>
+            <hr>
+
+          </div>
+          `;
+          // console.log(typeof htmltemp)
+          document.getElementById("htmltemp").innerHTML = htmltemp;
+          GetImgfromGoogle(book.rank,isbn)
+      })
+    }
+
+    //cannot customize the api
+
+    function GetImgfromGoogle(id,isbn){
+      fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + '&key=' + GBooks_api_key)
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        img_link = json.items[0].volumeInfo.imageLinks.thumbnail
+        // console.log(document.getElementById("img"))
+        document.getElementById("img"+id).setAttribute("src",img_link)
+        // console.log(img_link)
+        // $('#img2').attr('src',img_link);
+        // var img = img.replace(/^http:\/\//i, 'https://');// don't understand the secure part
+      })
+      .catch((err) => {
+        console.log(err)
+        var index = id - 1;
+        img = archivedImages[index];
+        document.getElementById("img"+id).setAttribute("src",img)
+      })
+    }
+
+    </script>
+
+  </body>
+</html>
